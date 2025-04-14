@@ -88,4 +88,12 @@ class Config
             $this->connection->close();
         }
     }
+
+    // GET SINGLE STUDENT RECORD
+    public function get_single_student($id)
+    {
+        $query  = "SELECT * FROM data WHERE id = $id";
+        $result = $this->connection->query($query);
+        return $result->fetch_assoc();
+    }
 }

@@ -3,32 +3,89 @@
     include "config.php";
     $config = new Config();
     $config->connect_db();
-    $error = null;
+    $edit_data = [
+        'id'    => '',
+        'name'  => '',
+        'age'   => '',
+        'city'  => '',
+        'hobby' => '',
+    ];
+    $edit_mode = false;
 
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_button"])) {
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["edit_button"])) {
+        $edit_mode = true;
+        $id        = $_POST["id"];
+
+        $student = $config->get_single_student($id);
+
+        if ($student) {
+            $edit_data = $student;
+        }
+    }
+
+    // Add record on submit button press
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["add_button"])) {
         $name  = $_POST["name"];
         $age   = $_POST["age"];
         $city  = $_POST["city"];
         $hobby = $_POST["hobby"];
 
         if (empty($name)) {
-            $error = "Please enter your Name";
+            $_SESSION["error"] = "Please enter your Name";
         } elseif (empty($age)) {
-            $error = "Please enter your Age";
+            $_SESSION["error"] = "Please enter your Age";
         } elseif (empty($city)) {
-            $error = "Please enter your City";
+            $_SESSION["error"] = "Please enter your City";
         } elseif (empty($hobby)) {
-            $error = "Please enter your Hobby";
+            $_SESSION["error"] = "Please enter your Hobby";
         } else {
             $result = $config->insert_record($name, $age, $city, $hobby);
             if ($result) {
                 $_SESSION["success"] = "Record added successfully";
-                header("Location: " . $_SERVER["PHP_SELF"]);
-                exit();
             } else {
-                $error = "Failed to insert record";
+                $_SESSION["error"] = "Failed to insert record";
             }
         }
+        header("Location: " . $_SERVER["PHP_SELF"]);
+        exit();
+
+    }
+
+    // Delete record method
+    if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['delete_button'])) {
+        $id = $_POST["id"];
+
+        $result = $config->delete_record($id);
+        if ($result) {
+            $_SESSION["success"] = "Record deleted successfully";
+            header("Location: " . $_SERVER["PHP_SELF"]);
+            exit();
+        } else {
+            $error = "Failed to delete record";
+        }
+    }
+
+    // Update record on form submit
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_button"])) {
+        $id    = $_POST["id"];
+        $name  = $_POST["name"];
+        $age   = $_POST["age"];
+        $city  = $_POST["city"];
+        $hobby = $_POST["hobby"];
+
+        if (empty($name) || empty($age) || empty($city) || empty($hobby)) {
+            $_SESSION["error"] = "Please fill all fields to update.";
+        } else {
+            $result = $config->update_record($id, $name, $age, $city, $hobby);
+            if ($result) {
+                $_SESSION["success"] = "Record updated successfully.";
+            } else {
+                $_SESSION["error"] = "Failed to update record.";
+            }
+        }
+
+        header("Location: " . $_SERVER["PHP_SELF"]);
+        exit();
     }
 ?>
 
@@ -43,35 +100,46 @@
 <body class="bg-dark">
 
 <div class="container mt-5">
-    <?php if (!empty($error)): ?>
+
+
+    <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?php echo $error?>
+            <?php echo $_SESSION["error"] ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    <?php endif; ?>
+    <?php unset($_SESSION["error"]);endif; ?>
+
     <?php if (isset($_SESSION["success"])): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= $_SESSION["success"] ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <?php unset($_SESSION["success"]); ?>
-    <?php endif; ?>
-    <h2 class="mb-4" style="color:white">Add New Student</h2>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?php echo $_SESSION["success"] ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+    <?php endif;
+        unset($_SESSION["success"]);
+    ?>
+
+    <h2 class="mb-4" style="color:white">
+        <?php echo $edit_mode ? 'Edit Student Record' : 'Add New Student'; ?>
+    </h2>
     <form class="row g-3" method="post">
+        <input type="hidden" name="id" value="<?php echo $edit_data['id']; ?>">
         <div class="col-md-3">
-            <input type="text" class="form-control" placeholder="Name" name="name">
+            <input type="text" class="form-control" placeholder="Name" name="name" value="<?php echo $edit_data['name']; ?>">
         </div>
         <div class="col-md-2">
-            <input type="number" class="form-control" placeholder="Age" name="age">
+            <input type="number" class="form-control" placeholder="Age" name="age" value="<?php echo $edit_data['age']; ?>">
         </div>
         <div class="col-md-3">
-            <input type="text" class="form-control" placeholder="City" name="city">
+            <input type="text" class="form-control" placeholder="City" name="city" value="<?php echo $edit_data['city']; ?>">
         </div>
         <div class="col-md-3">
-            <input type="text" class="form-control" placeholder="Hobby" name="hobby">
+            <input type="text" class="form-control" placeholder="Hobby" name="hobby" value="<?php echo $edit_data['hobby']; ?>">
         </div>
         <div class="col-md-1">
-            <button type="submit" class="btn btn-primary w-100" name="add_button">Add</button>
+            <button type="submit" class="btn btn-<?php echo $edit_mode ? 'success' : 'primary'; ?> w-100" name="<?php echo $edit_mode ? 'update_button' : 'add_button'; ?>">
+                <?php echo $edit_mode ? 'Update' : 'Add'; ?>
+            </button>
+
         </div>
     </form>
 
@@ -90,34 +158,62 @@
             </tr>
         </thead>
         <tbody class="table-dark">
-            <?php
-                $response = json_decode($config->fetch_student_records(), true);
-                $students = $response["data"];
 
-                foreach ($students as $student) {
+        <?php
+            $response = json_decode($config->fetch_student_records(), true);
+            $students = $response["data"];
+        ?>
 
-                    if ($student["id"] != 1) {
-                        echo "
-                    <tr>
-                    <td colspan=6><hr style=\"margin-left: 4rem; margin-right: 10rem; margin-top: 10px; margin-bottom: 10px;\"></td>
-                    </tr>";
-                    } else {
-                        echo "<tr><td colspan=6><hr class=\"border-0 mt-2 mb-0\"></td></tr>";
-                    }
-                    echo "
-                    <tr>
-                    <td>{$student['id']}</td>
-                    <td>{$student['name']}</td>
-                    <td>{$student['age']}</td>
-                    <td>{$student['city']}</td>
-                    <td>{$student['hobby']}</td>
-                    <td>
-                        <button class='btn btn-sm btn-warning me-2 ps-4 pe-4'>Edit</button>
-                        <button class='btn btn-sm btn-danger ps-3 pe-3'>Delete</button>
+        <?php foreach ($students as $student): ?>
+
+            <?php if ($student["id"] != 1): ?>
+                <tr>
+                    <td colspan="6">
+                        <hr style="margin-left: 4rem; margin-right: 10rem; margin-top: 10px; margin-bottom: 10px;">
                     </td>
-                </tr>";
-                }
-            ?>
+                </tr>
+            <?php else: ?>
+                <tr>
+                    <td colspan="6">
+                        <hr class="border-0 mt-2 mb-0">
+                    </td>
+                </tr>
+            <?php endif; ?>
+
+            <tr>
+                <td><?php echo $student['id'] ?></td>
+                <td><?php echo $student['name'] ?></td>
+                <td><?php echo $student['age'] ?></td>
+                <td><?php echo $student['city'] ?></td>
+                <td><?php echo $student['hobby'] ?></td>
+
+                <td>
+                    <div class="d-flex justify-content-center gap-2">
+                        <form method="get" action="edit.php">
+                            <input type="hidden" name="id" value="<?php echo $student['id'] ?>">
+                            <button class="btn btn-sm btn-warning ps-4 pe-4" name="edit_button">Edit</button>
+                        </form>
+
+                         <!-- <form method="post">
+                            <input type="hidden" name="id" value="<?php echo $student['id'] ?>">
+                            <button class="btn btn-sm btn-warning me-2 ps-4 pe-4" name="edit_button">Edit</button>
+                        </form> -->
+
+                        <form method="post">
+                            <input type="hidden" name="id" value="<?php echo $student['id'] ?>">
+                            <button class="btn btn-sm btn-danger ps-3 pe-3" name="delete_button">Delete</button>
+                        </form>
+                    </div>
+                </td>
+
+
+
+
+            </tr>
+
+        <?php endforeach; ?>
+
+
         </tbody>
     </table>
 </div>
