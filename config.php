@@ -65,6 +65,22 @@ class Config
         return $result;
     }
 
+    // DELETE RECORD
+    public function delete_record($id)
+    {
+        $query  = "DELETE FROM data WHERE id = $id";
+        $result = $this->connection->query($query);
+        return $result;
+    }
+
+    // UPDATE RECORD
+    public function update_record($id, $name, $age, $city, $hobby)
+    {
+        $query  = "UPDATE data SET name = '$name', age = $age, city = '$city', hobby = '$hobby' WHERE id = $id";
+        $result = $this->connection->query($query);
+        return $result;
+    }
+
     // CLOSE CONNECTION
     public function close_connection()
     {
