@@ -42,13 +42,23 @@ class Config
                 while ($row = $result->fetch_assoc()) {
                     $records[] = $row;
                 }
+                header("HTTP/1.0 200 Fetched");
+                return json_encode(
+                    [
+                        "status"  => $this->response,
+                        "message" => "Student Records Fetched Successfully",
+                        "data"    => $records,
+                    ]
+                );
+            } else {
+                $data = [
+                    "status"  => 404,
+                    "message" => "No Customer Found!",
+                ];
+                header("HTTP/1.0 404 No Customer Found");
+                return json_encode($data);
             }
-            return json_encode(
-                [
-                    "status" => $this->response,
-                    "data"   => $records,
-                ]
-            );
+
         } catch (Exception $e) {
             echo json_encode([
                 "status"  => 500,
