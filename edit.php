@@ -10,9 +10,11 @@
 
     // Fetch student data
     if ($id) {
-        $student = $config->get_single_student($id);
-        if (! $student) {
+        $data = json_decode($config->get_single_student($id), true);
+        if ($data['status'] == 404) {
             $error = "Student not found";
+        } else {
+            $student = $data['data'];
         }
     }
 

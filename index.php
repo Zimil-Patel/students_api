@@ -12,16 +12,16 @@
     ];
     $edit_mode = false;
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["edit_button"])) {
-        $edit_mode = true;
-        $id        = $_POST["id"];
+    // if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["edit_button"])) {
+    //     $edit_mode = true;
+    //     $id        = $_POST["id"];
 
-        $student = $config->get_single_student($id);
+    //     $student = $config->get_single_student($id);
 
-        if ($student) {
-            $edit_data = $student;
-        }
-    }
+    //     if ($student) {
+    //         $edit_data = $student;
+    //     }
+    // }
 
     // Add record on submit button press
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["add_button"])) {
@@ -65,28 +65,28 @@
         }
     }
 
-    // Update record on form submit
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_button"])) {
-        $id    = $_POST["id"];
-        $name  = $_POST["name"];
-        $age   = $_POST["age"];
-        $city  = $_POST["city"];
-        $hobby = $_POST["hobby"];
+    // // Update record on form submit
+    // if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_button"])) {
+    //     $id    = $_POST["id"];
+    //     $name  = $_POST["name"];
+    //     $age   = $_POST["age"];
+    //     $city  = $_POST["city"];
+    //     $hobby = $_POST["hobby"];
 
-        if (empty($name) || empty($age) || empty($city) || empty($hobby)) {
-            $_SESSION["error"] = "Please fill all fields to update.";
-        } else {
-            $result = $config->update_record($id, $name, $age, $city, $hobby);
-            if ($result) {
-                $_SESSION["success"] = "Record updated successfully.";
-            } else {
-                $_SESSION["error"] = "Failed to update record.";
-            }
-        }
+    //     if (empty($name) || empty($age) || empty($city) || empty($hobby)) {
+    //         $_SESSION["error"] = "Please fill all fields to update.";
+    //     } else {
+    //         $result = $config->update_record($id, $name, $age, $city, $hobby);
+    //         if ($result) {
+    //             $_SESSION["success"] = "Record updated successfully.";
+    //         } else {
+    //             $_SESSION["error"] = "Failed to update record.";
+    //         }
+    //     }
 
-        header("Location: " . $_SERVER["PHP_SELF"]);
-        exit();
-    }
+    //     header("Location: " . $_SERVER["PHP_SELF"]);
+    //     exit();
+    // }
 ?>
 
 

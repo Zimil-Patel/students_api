@@ -104,6 +104,22 @@ class Config
     {
         $query  = "SELECT * FROM data WHERE id = $id";
         $result = $this->connection->query($query);
-        return $result->fetch_assoc();
+
+        if ($result && $result->num_rows > 0) {
+            $data = [
+                "status"  => 200,
+                "message" => "Student Record Fetched Successfully",
+                "data"    => $result->fetch_assoc(),
+            ];
+            header("HTTP/1.0 200 Fetched");
+            return json_encode($data);
+        } else {
+            $data = [
+                "status"  => 404,
+                "message" => "Student Record Not Found",
+            ];
+            header("HTTP/1.0 404 No Student Found");
+            return json_encode($data);
+        }
     }
 }
